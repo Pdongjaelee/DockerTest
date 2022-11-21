@@ -2,6 +2,7 @@ plugins {
 	id 'org.springframework.boot' version '2.6.12'
 	id 'io.spring.dependency-management' version '1.0.14.RELEASE'
 	id 'java'
+	id 'com.palantir.docker-compose' version '0.33.0'
 }
 
 group = 'com.sparta'
@@ -44,5 +45,8 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+dockerCompose {
+	dockerComposeFile 'docker-compose.yaml'
+}
 
 //final
