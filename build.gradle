@@ -1,11 +1,17 @@
-plugins {
-	id 'org.springframework.boot' version '2.6.12'
-	id 'io.spring.dependency-management' version '1.0.14.RELEASE'
-	id 'java'
-	id 'com.palantir.docker-compose' version '0.33.0'
+buildscript { // 동적쿼리
+	ext {
+		queryDslVersion = "5.0.0"
+	}
 }
 
-group = 'com.sparta'
+plugins {
+	id 'org.springframework.boot' version '2.7.5'
+	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+	id 'java'
+	id "com.ewerk.gradle.plugins.querydsl" version "1.0.10" // 동적쿼리
+}
+
+group = 'Docker-test'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
@@ -22,31 +28,64 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 
-	//JWT
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-	implementation 'commons-codec:commons-codec:1.15'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-	compileOnly 'com.auth0:java-jwt:4.0.0'
+	//S3
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-aws', version: '2.2.6.RELEASE'
 
-	//validation
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	//JWT
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2'
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2'
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2'
+	runtimeOnly 'com.h2database:h2'
+
+	//javassist
+	implementation group: 'org.javassist', name: 'javassist', version: '3.29.0-GA'
+
+	//swagger
+	implementation 'io.springfox:springfox-swagger2:2.9.2'
+	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+
+	//queryDSL
+	implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
+	implementation "com.querydsl:querydsl-apt:${queryDslVersion}"
+
+	//redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
+
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
 
-dockerCompose {
-	dockerComposeFile 'docker-compose.yaml'
+// QueryDSL start
+def querydslDir = "$buildDir/generated/querydsl"
+
+querydsl {
+	jpa = true
+	querydslSourcesDir = querydslDir
 }
 
-//final
+sourceSets {
+	main.java.srcDir querydslDir
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+	querydsl.extendsFrom compileClasspath
+}
+
+compileQuerydsl {
+	options.annotationProcessorPath = configurations.querydsl
+}
+// QueryDSL end
