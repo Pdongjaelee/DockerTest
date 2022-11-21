@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  S3_BUCKET_NAME: aws-dongjaeproject-s3
+  S3_BUCKET_NAME: aws-dongjaeproject
 
 jobs:
   build:
